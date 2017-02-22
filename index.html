@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>HEX Clock</title>
+    
+    <link rel="icon" type="image/png" href="icon.png" sizes="32x32">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <div class="weather"></div>
+    <div class="center">
+      <div class="time"></div>
+      <br><br>
+      <div class="quote"></div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="jquery.simpleWeather.min.js"></script>
+    <script>
+      $(document).ready(function () {
+	assignColor(getDate())
+	getQuote()
+	getLocation()
+      })
+      setInterval(function () {
+	assignColor(getDate())
+      }, 1000)
+      function assignColor (time) {
+	var color = '#' + time
+	if (time.substr(4, 6) == 30 || time.substr(4, 6) == 00) getQuote()
+	$('.time').html(color.replace('#', '').replace(/(.{2})/g, '$1 '))
+	$('body').attr('style', 'background-color:' + color + ' !important')
+      }
+      function getDate () {
+	var date = new Date()
+	var h = date.getHours(),
+	    m = date.getMinutes(),
+	    s = date.getSeconds()
+	if (h < 10) h = '0' + h
+	if (m < 10) m = '0' + m
+	if (s < 10) s = '0' + s
+	
+	var str = h + '' + m + '' + s
+	
+	return str
+      }
+      function getQuote () {
+	$.get('http://www.quotzzy.co/api/quote', function (data) {
+	  $('.quote').fadeOut(500, function () {
+	    $('.quote').html(data['text'])
+	    $('.quote').fadeIn(500)
+	  })
+	})
+      }
+      function getLocation () {
+	if ("geolocation" in navigator) {
+	  navigator.geolocation.getCurrentPosition(function (position) {
+	    getWeather(position.coords.latitude + ',' + position.coords.longitude)
+	  })
+	} else {
+	  console.log("Browser doesn't support geolocation!")
+	}
+      }
+      function getWeather (location, woeid) {
+	$.simpleWeather({
+	  location: location,
+	  woeid: woeid,
+	  unit: 'c',
+	  success: function (weather) {
+	    html = `
+	      <i class="icon-` + weather.code + `"></i> <b>` + weather.temp + `&deg;` + weather.units.temp + `</b> & <b>` + weather.currently + `</b> in <b>` + weather.city + `</b> | ` + weather.region
+	    
+	    //html = '<h2><i class="icon-'+weather.code+'"></i> '+weather.temp+'&deg;'+weather.units.temp+'</h2>';
+	    //html += '<ul><li>'+weather.city+', '+weather.region+'</li>';
+	    //html += '<li class="currently">'+weather.currently+'</li>';
+	    //html += '<li>'+weather.alt.temp+'&deg;C</li></ul>';  
+	    
+	    $(".weather").html(html)
+	  },
+	  error: function (error) {
+	    $(".weather").html('<p>'+error+'</p>')
+	  }
+	})
+      }
+      function invertHex(hexnum){
+	if(hexnum.length != 6) {
+	  console.error("Hex color must be six hex numbers in length.");
+	  return false;
+	}
+
+	hexnum = hexnum.toUpperCase();
+	var splitnum = hexnum.split("");
+	var resultnum = "";
+	var simplenum = "FEDCBA9876".split("");
+	var complexnum = new Array();
+	complexnum.A = "5";
+	complexnum.B = "4";
+	complexnum.C = "3";
+	complexnum.D = "2";
+	complexnum.E = "1";
+	complexnum.F = "0";
+
+	for(i=0; i<6; i++){
+	  if(!isNaN(splitnum[i])) {
+	    resultnum += simplenum[splitnum[i]]; 
+	  } else if(complexnum[splitnum[i]]){
+	    resultnum += complexnum[splitnum[i]]; 
+	  } else {
+	    console.error("Hex colors must only include hex numbers 0-9, and A-F");
+	    return false;
+	  }
+	}
+
+	return resultnum;
+      }
+    </script>
+  </body>
+</html>
